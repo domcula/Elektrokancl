@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElektroKalc – Kalkulačka pro elektrikáře</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1117;--surface:#181c27;--surface2:#1f2435;--border:#2a3045;--accent:#f5a623;--accent2:#e8891a;--text:#e8ecf4;--muted:#7a8299;--green:#3ecf8e;--red:#f25f5c;--blue:#4a9eff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:100;}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:-0.5px;}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.logo span{color:var(--accent);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.badge{font-size:11px;font-family:'JetBrains Mono',monospace;background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:4px;color:var(--muted);}
+.btn-print{background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:13px;font-family:'Space Grotesk',sans-serif;padding:6px 14px;cursor:pointer;transition:all .15s;}
+.btn-print:hover{color:var(--text);}
+.container{max-width:960px;margin:0 auto;padding:32px 24px;}
+.page-title{font-size:28px;font-weight:700;letter-spacing:-1px;margin-bottom:6px;}
+.page-subtitle{color:var(--muted);font-size:14px;margin-bottom:32px;}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:28px;overflow-x:auto;}
+.tab{flex:1;padding:9px 12px;border:none;background:transparent;color:var(--muted);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:500;border-radius:7px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.tab.active{background:var(--accent);color:#0f1117;font-weight:700;}
+.tab:hover:not(.active){background:var(--surface2);color:var(--text);}
+.main-layout{display:grid;grid-template-columns:1fr 260px;gap:20px;}
+@media(max-width:768px){.main-layout{grid-template-columns:1fr;}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;}
+.card-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:20px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:580px){.grid-2{grid-template-columns:1fr;}}
+
+/* Slider field */
+.sfield{margin-bottom:4px;}
+.sfield label{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.sfield label span{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);font-weight:500;text-transform:none;letter-spacing:0;}
+.sfield input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;margin-bottom:6px;}
+.sfield input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg);}
+.sfield input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg);}
+.sfield input[type=number]{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);transition:border-color .15s;appearance:none;}
+.sfield input[type=number]:focus{outline:none;border-color:var(--accent);}
+
+/* Select field */
+.selfield{margin-bottom:4px;}
+.selfield label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.selfield select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Space Grotesk',monospace;font-size:13px;color:var(--text);transition:border-color .15s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237a8299' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.selfield select:focus{outline:none;border-color:var(--accent);}
+
+.btn{background:var(--accent);color:#0f1117;border:none;border-radius:8px;padding:12px 24px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:20px;transition:background .15s,transform .1s;}
+.btn:hover{background:var(--accent2);}
+.btn:active{transform:scale(.98);}
+.btn-sec{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-sec:hover{background:var(--border);}
+.result-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-top:20px;display:none;}
+.result-card.visible{display:block;}
+.result-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.save-link{font-size:11px;cursor:pointer;color:var(--accent);font-weight:600;text-transform:none;letter-spacing:0;}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;}
+.ri{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.ri.hl{border-color:var(--accent);background:rgba(245,166,35,.06);}
+.ri.ok{border-color:var(--green);background:rgba(62,207,142,.06);}
+.ri.warn{border-color:var(--red);background:rgba(242,95,92,.06);}
+.rl{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500;}
+.rv{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;color:var(--text);}
+.ri.hl .rv{color:var(--accent);}
+.ri.ok .rv{color:var(--green);}
+.ri.warn .rv{color:var(--red);}
+.rs{font-size:11px;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+.note{margin-top:14px;padding:10px 14px;border-radius:7px;font-size:13px;line-height:1.5;}
+.note.info{background:rgba(74,158,255,.1);border-left:3px solid var(--blue);color:#a8c8ff;}
+.note.warn{background:rgba(242,95,92,.1);border-left:3px solid var(--red);color:#ffaaaa;}
+.note.ok{background:rgba(62,207,142,.1);border-left:3px solid var(--green);color:#a0f0cd;}
+.panel{display:none;}
+.panel.active{display:block;}
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+.tip{background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#a8c8ff;line-height:1.6;}
+.history-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.history-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.history-clear{font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;}
+.history-clear:hover{color:var(--red);}
+.h-empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0;line-height:1.6;}
+.h-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;}
+.h-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:4px;}
+.h-main{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:500;}
+.h-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+@media print{header,.tabs,.btn,.btn-sec,.history-panel,.badge,.btn-print{display:none!important;}.main-layout{grid-template-columns:1fr!important;}.result-card{display:block!important;}.body{background:white;color:black;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-icon">⚡</div>Elektro<span>Kalc</span></div>
+  <div class="header-right">
+    <button class="btn-print" onclick="window.print()">🖨 Tisk / PDF</button>
+    <div class="badge">v0.3</div>
+  </div>
+</header>
+<div class="container">
+  <h1 class="page-title">Kalkulačka pro elektrikáře</h1>
+  <p class="page-subtitle">Rychlé výpočty přímo v terénu. Bez tužky, bez tabulek.</p>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('kabel',this)">Průřez kabelu</button>
+    <button class="tab" onclick="switchTab('jistic',this)">Jistič</button>
+    <button class="tab" onclick="switchTab('spotreba',this)">Spotřeba</button>
+    <button class="tab" onclick="switchTab('osvetleni',this)">Osvětlení</button>
+    <button class="tab" onclick="switchTab('kompenzace',this)">Účiník</button>
+    <button class="tab" onclick="switchTab('transformator',this)">Transformátor</button>
+  </div>
+  <div class="main-layout">
+    <div>
+
+      <!-- KABEL -->
+      <div class="panel active" id="panel-kabel">
+        <div class="card">
+          <div class="card-title">Průřez kabelu</div>
+          <div class="grid-2">
+            <div class="sfield">
+              <label>Příkon spotřebiče <span id="k-prikon-v">—</span></label>
+              <input type="range" id="k-prikon-s" min="100" max="20000" step="100" oninput="sync('k-prikon',this.value)">
+              <input type="number" id="k-prikon" placeholder="např. 3500 W" min="100" max="20000" oninput="sync('k-prikon-s',this.value);showVal('k-prikon-v',this.value,'W')">
+            </div>
+            <div class="sfield">
+              <label>Délka vedení (tam+zpět) <span id="k-delka-v">—</span></label>
+              <input type="range" id="k-delka-s" min="1" max="200" step="1" oninput="sync('k-delka',this.value)">
+              <input type="number" id="k-delka" placeholder="např. 20 m" min="1" max="200" oninput="sync('k-delka-s',this.value);showVal('k-delka-v',this.value,'m')">
+            </div>
+            <div class="selfield"><label>Napětí sítě</label><select id="k-napeti"><option value="230">230 V – jednofázové</option><option value="400">400 V – třífázové</option></select></div>
+            <div class="selfield"><label>Materiál vodiče</label><select id="k-material"><option value="56">Měď (Cu)</option><option value="34">Hliník (Al)</option></select></div>
+            <div class="selfield"><label>Max. úbytek napětí</label><select id="k-ubytek"><option value="3">3 % – doporučeno</option><option value="5">5 % – max. přípustné</option><option value="2">2 % – přísné</option></select></div>
+            <div class="selfield"><label>Způsob uložení</label><select id="k-ulozeni"><option value="1.0">Ve zdi / trubce</option><option value="0.85">Svazek v trubce</option><option value="1.2">Volně na vzduchu</option></select></div>
+          </div>
+          <button class="btn" onclick="vypocitejKabel()">⚡ Vypočítat průřez</button>
+        </div>
+        <div class="result-card" id="result-kabel">
+          <div class="result-title">Výsledek <span class="save-link" onclick="saveToHistory('kabel')">+ Uložit</span></div>
+          <div class="result-grid" id="kabel-values"></div>
+          <div id="kabel-note"></div>
+        </div>
+      </div>
+
+      <!-- JISTIČ -->
+      <div class="panel" id="panel-jistic">
+        <div class="card">
+          <div class="card-title">Dimenzování jističe</div>
+          <div class="grid-2">
+            <div class="sfield">
+              <label>Celkový příkon obvodu <span id="j-prikon-v">—</span></label>
+              <input type="range" id="j-prikon-s" min="100" max="30000" step="100" oninput="sync('j-prikon',this.value)">
+              <input type="number" id="j-prikon" placeholder="např. 5000 W" oninput="sync('j-prikon-s',this.value);showVal('j-prikon-v',this.value,'W')">
+            </div>
+            <div class="selfield"><label>Typ sítě</label><select id="j-sit"><option value="230">230 V – jednofázová</option><option value="400">400 V – třífázová</option></select></div>
+            <div class="selfield"><label>Průřez kabelu</label><select id="j-prurez"><option value="1.5">1,5 mm²</option><option value="2.5">2,5 mm²</option><option value="4">4 mm²</option><option value="6">6 mm²</option><option value="10">10 mm²</option><option value="16">16 mm²</option><option value="25">25 mm²</option></select></div>
+            <div class="selfield"><label>Charakteristika jističe</label><select id="j-char"><option value="B">B – světlo, zásuvky</option><option value="C">C – motory, spotřebiče</option><option value="D">D – velké motory</option></select></div>
+          </div>
+          <button class="btn" onclick="vypocitejJistic()">⚡ Dimenzovat jistič</button>
+        </div>
+        <div class="result-card" id="result-jistic">
+          <div class="result-title">Výsledek <span class="save-link" onclick="saveToHistory('jistic')">+ Uložit</span></div>
+          <div class="result-grid" id="jistic-values"></div>
+          <div id="jistic-note"></div>
+        </div>
+      </div>
+
+      <!-- SPOTŘEBA -->
+      <div class="panel" id="panel-spotreba">
+        <div class="card">
+          <div class="card-title">Spotřeba & náklady</div>
+          <div id="spotrebice-list"></div>
+          <button class="btn btn-sec" style="margin-top:12px;" onclick="pridejSpotrebic()">+ Přidat spotřebič</button>
+          <hr class="divider">
+          <div class="grid-2">
+            <div class="sfield">
+              <label>Cena elektřiny <span id="s-cena-v">—</span></label>
+              <input type="range" id="s-cena-s" min="2" max="15" step="0.1" oninput="sync('s-cena',this.value)">
+              <input type="number" id="s-cena" placeholder="např. 6.5 Kč/kWh" step="0.1" oninput="sync('s-cena-s',this.value);showVal('s-cena-v',this.value,'Kč/kWh')">
+            </div>
+            <div class="sfield">
+              <label>Počet dní <span id="s-dny-v">—</span></label>
+              <input type="range" id="s-dny-s" min="1" max="365" step="1" oninput="sync('s-dny',this.value)">
+              <input type="number" id="s-dny" placeholder="např. 30 dní" oninput="sync('s-dny-s',this.value);showVal('s-dny-v',this.value,'dní')">
+            </div>
+          </div>
+          <button class="btn" onclick="vypocitejSpotreba()">⚡ Vypočítat náklady</button>
+        </div>
+        <div class="result-card" id="result-spotreba">
+          <div class="result-title">Výsledek <span class="save-link" onclick="saveToHistory('spotreba')">+ Uložit</span></div>
+          <div class="result-grid" id="spotreba-values"></div>
+          <div id="spotreba-note"></div>
+        </div>
+      </div>
+
+      <!-- OSVĚTLENÍ -->
+      <div class="panel" id="panel-osvetleni">
+        <div class="card">
+          <div class="card-title">Výpočet osvětlení místnosti</div>
+          <div class="tip">💡 Počet svítidel pro požadovanou osvětlenost dle EN 12464-1 (metoda lumen).</div>
+          <div class="grid-2">
+            <div class="sfield">
+              <label>Délka místnosti <span id="o-delka-v">—</span></label>
+              <input type="range" id="o-delka-s" min="1" max="30" step="0.5" oninput="sync('o-delka',this.value)">
+              <input type="number" id="o-delka" placeholder="např. 5 m" oninput="sync('o-delka-s',this.value);showVal('o-delka-v',this.value,'m')">
+            </div>
+            <div class="sfield">
+              <label>Šířka místnosti <span id="o-sirka-v">—</span></label>
+              <input type="range" id="o-sirka-s" min="1" max="20" step="0.5" oninput="sync('o-sirka',this.value)">
+              <input type="number" id="o-sirka" placeholder="např. 4 m" oninput="sync('o-sirka-s',this.value);showVal('o-sirka-v',this.value,'m')">
+            </div>
+            <div class="sfield">
+              <label>Výška místnosti <span id="o-vyska-v">—</span></label>
+              <input type="range" id="o-vyska-s" min="2" max="6" step="0.1" oninput="sync('o-vyska',this.value)">
+              <input type="number" id="o-vyska" placeholder="např. 2.7 m" oninput="sync('o-vyska-s',this.value);showVal('o-vyska-v',this.value,'m')">
+            </div>
+            <div class="selfield"><label>Typ prostoru</label><select id="o-typ"><option value="100">Sklep / chodba (100 lx)</option><option value="200">Koupelna / schodiště (200 lx)</option><option value="300">Obývací pokoj (300 lx)</option><option value="500">Kancelář / kuchyň (500 lx)</option><option value="750">Dílna / technická místnost (750 lx)</option><option value="1000">Specializované pracoviště (1000 lx)</option></select></div>
+            <div class="sfield">
+              <label>Světelný tok svítidla <span id="o-lumen-v">—</span></label>
+              <input type="range" id="o-lumen-s" min="200" max="5000" step="50" oninput="sync('o-lumen',this.value)">
+              <input type="number" id="o-lumen" placeholder="např. 800 lm" oninput="sync('o-lumen-s',this.value);showVal('o-lumen-v',this.value,'lm')">
+            </div>
+            <div class="selfield"><label>Odrazivost stropu</label><select id="o-odraz"><option value="0.5">Tmavý strop (50 %)</option><option value="0.65">Standardní (65 %)</option><option value="0.8">Světlý strop (80 %)</option></select></div>
+          </div>
+          <button class="btn" onclick="vypocitejOsvetleni()">⚡ Vypočítat osvětlení</button>
+        </div>
+        <div class="result-card" id="result-osvetleni">
+          <div class="result-title">Výsledek <span class="save-link" onclick="saveToHistory('osvetleni')">+ Uložit</span></div>
+          <div class="result-grid" id="osvetleni-values"></div>
+          <div id="osvetleni-note"></div>
+        </div>
+      </div>
+
+      <!-- KOMPENZACE -->
+      <div class="panel" id="panel-kompenzace">
+        <div class="card">
+          <div class="card-title">Kompenzace účiníku (cos φ)</div>
+          <div class="grid-2">
+            <div class="sfield">
+              <label>Činný výkon <span id="kp-P-v">—</span></label>
+              <input type="range" id="kp-P-s" min="500" max="100000" step="500" oninput="sync('kp-P',this.value)">
+              <input type="number" id="kp-P" placeholder="např. 10000 W" oninput="sync('kp-P-s',this.value);showVal('kp-P-v',this.value,'W')">
+            </div>
+            <div class="sfield">
+              <label>Stávající cos φ <span id="kp-cos1-v">—</span></label>
+              <input type="range" id="kp-cos1-s" min="0.3" max="0.98" step="0.01" oninput="sync('kp-cos1',this.value)">
+              <input type="number" id="kp-cos1" placeholder="např. 0.75" step="0.01" oninput="sync('kp-cos1-s',this.value);showVal('kp-cos1-v',this.value,'')">
+            </div>
+            <div class="sfield">
+              <label>Požadovaný cos φ <span id="kp-cos2-v">—</span></label>
+              <input type="range" id="kp-cos2-s" min="0.5" max="1" step="0.01" oninput="sync('kp-cos2',this.value)">
+              <input type="number" id="kp-cos2" placeholder="např. 0.95" step="0.01" oninput="sync('kp-cos2-s',this.value);showVal('kp-cos2-v',this.value,'')">
+            </div>
+            <div class="selfield"><label>Napětí sítě</label><select id="kp-U"><option value="230">230 V</option><option value="400">400 V (3f)</option></select></div>
+          </div>
+          <button class="btn" onclick="vypocitejKompenzaci()">⚡ Vypočítat kompenzaci</button>
+        </div>
+        <div class="result-card" id="result-kompenzace">
+          <div class="result-title">Výsledek <span class="save-link" onclick="saveToHistory('kompenzace')">+ Uložit</span></div>
+          <div class="result-grid" id="kompenzace-values"></div>
+          <div id="kompenzace-note"></div>
+        </div>
+      </div>
+
+      <!-- TRANSFORMÁTOR -->
+      <div class="panel" id="panel-transformator">
+        <div class="card">
+          <div class="card-title">Výpočet transformátoru</div>
+          <div class="grid-2">
+            <div class="sfield">
+              <label>Primární napětí <span id="t-U1-v">—</span></label>
+              <input type="range" id="t-U1-s" min="12" max="1000" step="1" oninput="sync('t-U1',this.value)">
+              <input type="number" id="t-U1" placeholder="např. 230 V" oninput="sync('t-U1-s',this.value);showVal('t-U1-v',this.value,'V')">
+            </div>
+            <div class="sfield">
+              <label>Sekundární napětí <span id="t-U2-v">—</span></label>
+              <input type="range" id="t-U2-s" min="1" max="500" step="1" oninput="sync('t-U2',this.value)">
+              <input type="number" id="t-U2" placeholder="např. 24 V" oninput="sync('t-U2-s',this.value);showVal('t-U2-v',this.value,'V')">
+            </div>
+            <div class="sfield">
+              <label>Výkon zátěže <span id="t-P-v">—</span></label>
+              <input type="range" id="t-P-s" min="10" max="10000" step="10" oninput="sync('t-P',this.value)">
+              <input type="number" id="t-P" placeholder="např. 500 W" oninput="sync('t-P-s',this.value);showVal('t-P-v',this.value,'W')">
+            </div>
+            <div class="sfield">
+              <label>Účinnost transformátoru <span id="t-eta-v">—</span></label>
+              <input type="range" id="t-eta-s" min="50" max="99" step="1" oninput="sync('t-eta',this.value)">
+              <input type="number" id="t-eta" placeholder="např. 92 %" oninput="sync('t-eta-s',this.value);showVal('t-eta-v',this.value,'%')">
+            </div>
+          </div>
+          <button class="btn" onclick="vypocitejTransformator()">⚡ Vypočítat</button>
+        </div>
+        <div class="result-card" id="result-transformator">
+          <div class="result-title">Výsledek <span class="save-link" onclick="saveToHistory('transformator')">+ Uložit</span></div>
+          <div class="result-grid" id="transformator-values"></div>
+          <div id="transformator-note"></div>
+        </div>
+      </div>
+
+    </div>
+    <!-- HISTORIE -->
+    <div>
+      <div class="history-panel">
+        <div class="history-title">Historie <button class="history-clear" onclick="clearHistory()">Smazat</button></div>
+        <div id="history-list"><div class="h-empty">Zatím žádné výpočty.<br>Po výpočtu klikni<br>„+ Uložit".</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Helpers ────────────────────────────────────
+function switchTab(name,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+}
+function sync(targetId, value){
+  const el = document.getElementById(targetId);
+  if(el) el.value = value;
+  // update label display
+  const vId = targetId.replace('-s','') + '-v';
+  const vEl = document.getElementById(vId);
+  // guess unit from slider context
+  if(vEl && !targetId.endsWith('-s')) return;
+  // update label from slider
+  if(targetId.endsWith('-s')){
+    const baseId = targetId.replace('-s','');
+    const numEl = document.getElementById(baseId);
+    if(numEl) numEl.value = value;
+    // find label span
+    const labelSpan = document.getElementById(baseId+'-v');
+    if(labelSpan) labelSpan.textContent = value + ' ' + (labelSpan.dataset.unit||'');
+  }
+}
+function showVal(spanId, value, unit){
+  const el = document.getElementById(spanId);
+  if(el) { el.textContent = value ? value+' '+unit : '—'; el.dataset.unit = unit; }
+  // also update slider
+}
+// Init slider labels on input
+document.querySelectorAll('input[type=range]').forEach(slider=>{
+  slider.addEventListener('input', function(){
+    const baseId = this.id.replace('-s','');
+    const labelSpan = document.getElementById(baseId+'-v');
+    const numEl = document.getElementById(baseId);
+    if(numEl){ numEl.value = this.value; }
+    if(labelSpan && labelSpan.dataset.unit !== undefined){
+      labelSpan.textContent = this.value + ' ' + labelSpan.dataset.unit;
+    } else if(labelSpan){
+      labelSpan.textContent = this.value;
+    }
+  });
+});
+
+const PRUREZ_LIST=[1.5,2.5,4,6,10,16,25,35,50,70,95,120];
+const MAX_CU={1.5:16,2.5:20,4:25,6:32,10:50,16:63,25:80,35:100,50:125,70:160,95:200,120:230};
+function ri(label,val,sub,cls=''){
+  return '<div class="ri '+cls+'"><div class="rl">'+label+'</div><div class="rv">'+val+'</div>'+(sub?'<div class="rs">'+sub+'</div>':'')+'</div>';
+}
+let lastR={};
+
+// ── Kabel ──────────────────────────────────────
+function vypocitejKabel(){
+  const P=+document.getElementById('k-prikon').value;
+  const L=+document.getElementById('k-delka').value;
+  const U=+document.getElementById('k-napeti').value;
+  const sigma=+document.getElementById('k-material').value;
+  const ubytek=+document.getElementById('k-ubytek').value/100;
+  const korekce=+document.getElementById('k-ulozeni').value;
+  if(!P||!L){alert('Vyplň příkon a délku vedení.');return;}
+  const I=U===230?P/(U*0.95):P/(U*Math.sqrt(3)*0.95);
+  const S_raw=(2*L*I)/(sigma*U*ubytek);
+  let S=PRUREZ_LIST.find(s=>s>=S_raw/korekce)||120;
+  const I_dov=MAX_CU[S]||230;
+  const ubyS=((2*L*I)/(sigma*S))/U*100;
+  const ok=I<=I_dov;
+  lastR.kabel={label:S+' mm² Cu',sub:I.toFixed(1)+' A · '+ubyS.toFixed(2)+'% úbytek',type:'Průřez kabelu'};
+  document.getElementById('kabel-values').innerHTML=
+    ri('Doporučený průřez',S+' mm²','Cu kabel','hl')+
+    ri('Proud obvodem',I.toFixed(1)+' A','cos φ = 0,95')+
+    ri('Max. proud kabelu',I_dov+' A',ok?'✓ vyhovuje':'✗ nevyhovuje',ok?'ok':'warn')+
+    ri('Skutečný úbytek',ubyS.toFixed(2)+' %',ubyS<=3?'✓ v normě':ubyS<=5?'⚠ na hranici':'✗ příliš vysoký');
+  document.getElementById('kabel-note').innerHTML=!ok
+    ?'<div class="note warn">⚠ Proud '+I.toFixed(1)+' A překračuje dovolené zatížení. Zvol vyšší průřez.</div>'
+    :ubyS>3?'<div class="note info">ℹ Úbytek '+ubyS.toFixed(2)+' % přijatelný. Pro citlivé spotřebiče zvol '+( PRUREZ_LIST[PRUREZ_LIST.indexOf(S)+1]||S)+' mm².</div>'
+    :'<div class="note ok">✓ Kabel '+S+' mm² Cu vyhovuje všem parametrům.</div>';
+  document.getElementById('result-kabel').classList.add('visible');
+}
+
+// ── Jistič ─────────────────────────────────────
+function vypocitejJistic(){
+  const P=+document.getElementById('j-prikon').value;
+  const U=+document.getElementById('j-sit').value;
+  const S=+document.getElementById('j-prurez').value;
+  const ch=document.getElementById('j-char').value;
+  if(!P){alert('Vyplň příkon obvodu.');return;}
+  const I=U===230?P/(U*0.95):P/(U*Math.sqrt(3)*0.95);
+  const mk={1.5:16,2.5:20,4:25,6:32,10:50,16:63,25:80};
+  const Ik=mk[S]||20;
+  const jis=[6,10,13,16,20,25,32,40,50,63];
+  let Ij=jis.find(j=>j>=I)||63;
+  if(Ij>Ik)Ij=Ik;
+  const cp={B:'3–5× In',C:'5–10× In',D:'10–20× In'};
+  lastR.jistic={label:ch+Ij+' A',sub:P+' W · kabel '+S+' mm²',type:'Dimenzování jističe'};
+  document.getElementById('jistic-values').innerHTML=
+    ri('Doporučený jistič',Ij+' A','char. '+ch,'hl')+
+    ri('Proud obvodu',I.toFixed(1)+' A','jmenovitý')+
+    ri('Ochrana kabelu',Ik+' A','max. pro '+S+' mm²',Ij<=Ik?'ok':'warn')+
+    ri('Charakteristika '+ch,cp[ch],'vypínací násobek');
+  document.getElementById('jistic-note').innerHTML=
+    '<div class="note info">ℹ Jistič '+ch+Ij+' A odpojí obvod při zkratu > '+(ch==='B'?5:ch==='C'?10:20)*Ij+' A.</div>';
+  document.getElementById('result-jistic').classList.add('visible');
+}
+
+// ── Spotřeba ───────────────────────────────────
+let spotrebice=[];
+function renderSpotrebice(){
+  if(!spotrebice.length){
+    document.getElementById('spotrebice-list').innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0;">Zatím žádné spotřebiče. Přidej je tlačítkem níže.</div>';
+    return;
+  }
+  document.getElementById('spotrebice-list').innerHTML=spotrebice.map((s,i)=>
+    '<div style="display:grid;grid-template-columns:1fr 90px 70px 36px;gap:8px;margin-bottom:8px;align-items:end;">'
+    +(i===0?'<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding-bottom:4px;">Název</div><div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding-bottom:4px;">Příkon (W)</div><div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding-bottom:4px;">Hod/den</div><div></div></div><div style="display:grid;grid-template-columns:1fr 90px 70px 36px;gap:8px;margin-bottom:8px;align-items:center;">':'')
+    +'<input type="text" value="'+s.nazev+'" oninput="spotrebice['+i+'].nazev=this.value" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:Space Grotesk,sans-serif;font-size:13px;color:var(--text);width:100%;">'
+    +'<input type="number" value="'+s.prikon+'" oninput="spotrebice['+i+'].prikon=+this.value" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:JetBrains Mono,monospace;font-size:13px;color:var(--text);width:100%;">'
+    +'<input type="number" value="'+s.hodiny+'" oninput="spotrebice['+i+'].hodiny=+this.value" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:JetBrains Mono,monospace;font-size:13px;color:var(--text);width:100%;">'
+    +'<button onclick="odstranSpotrebic('+i+')" style="width:36px;height:38px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:16px;">×</button>'
+    +'</div>'
+  ).join('');
+}
+function pridejSpotrebic(){spotrebice.push({nazev:'Spotřebič',prikon:1000,hodiny:1});renderSpotrebice();}
+function odstranSpotrebic(i){spotrebice.splice(i,1);renderSpotrebice();}
+function vypocitejSpotreba(){
+  const cena=+document.getElementById('s-cena').value;
+  const dny=+document.getElementById('s-dny').value;
+  if(!cena||!dny){alert('Vyplň cenu elektřiny a počet dní.');return;}
+  if(!spotrebice.length){alert('Přidej alespoň jeden spotřebič.');return;}
+  const kwhD=spotrebice.reduce((s,x)=>s+x.prikon*x.hodiny,0)/1000;
+  const kwhC=kwhD*dny;
+  const nakC=kwhC*cena;
+  const nakD=kwhD*cena;
+  lastR.spotreba={label:nakC.toFixed(0)+' Kč',sub:'za '+dny+' dní · '+kwhC.toFixed(1)+' kWh',type:'Spotřeba & cena'};
+  document.getElementById('spotreba-values').innerHTML=
+    ri('Celkové náklady',nakC.toFixed(0)+' Kč','za '+dny+' dní','hl')+
+    ri('Spotřeba celkem',kwhC.toFixed(1)+' kWh','za '+dny+' dní')+
+    ri('Denně',kwhD.toFixed(2)+' kWh',nakD.toFixed(1)+' Kč/den')+
+    ri('Ročně odhad',(nakD*365).toFixed(0)+' Kč',(kwhD*365).toFixed(0)+' kWh/rok');
+  document.getElementById('spotreba-note').innerHTML=
+    '<div class="note info">ℹ '+spotrebice.length+' spotřebiče · cena '+cena+' Kč/kWh</div>';
+  document.getElementById('result-spotreba').classList.add('visible');
+}
+
+// ── Osvětlení ──────────────────────────────────
+function vypocitejOsvetleni(){
+  const a=+document.getElementById('o-delka').value;
+  const b=+document.getElementById('o-sirka').value;
+  const h=+document.getElementById('o-vyska').value;
+  const Em=+document.getElementById('o-typ').value;
+  const lm=+document.getElementById('o-lumen').value;
+  const eta=+document.getElementById('o-odraz').value;
+  if(!a||!b||!h||!lm){alert('Vyplň všechny rozměry a světelný tok.');return;}
+  const A=a*b;
+  const k=(a*b)/(h*(a+b));
+  const UF=Math.min(0.85,0.35+k*0.15)*eta;
+  const MF=0.8;
+  const N_raw=(Em*A)/(lm*UF*MF);
+  const N=Math.ceil(N_raw);
+  const skutEm=(N*lm*UF*MF)/A;
+  const celkW=N*(lm/100);
+  lastR.osvetleni={label:N+' svítidel',sub:Em+' lx · '+a+'×'+b+' m',type:'Výpočet osvětlení'};
+  document.getElementById('osvetleni-values').innerHTML=
+    ri('Počet svítidel',N+' ks','výpočet: '+N_raw.toFixed(1)+' ks','hl')+
+    ri('Plocha místnosti',A.toFixed(1)+' m²','room index k = '+k.toFixed(2))+
+    ri('Dosažená osvětlenost',skutEm.toFixed(0)+' lx',skutEm>=Em?'✓ splněno':'⚠ nedostatečné',skutEm>=Em?'ok':'warn')+
+    ri('Odhad příkonu',celkW.toFixed(0)+' W','při 100 lm/W LED');
+  document.getElementById('osvetleni-note').innerHTML=
+    '<div class="note info">ℹ Zjednodušená metoda lumen. Pro přesný výpočet použij DIALux.</div>';
+  document.getElementById('result-osvetleni').classList.add('visible');
+}
+
+// ── Kompenzace ─────────────────────────────────
+function vypocitejKompenzaci(){
+  const P=+document.getElementById('kp-P').value;
+  const c1=+document.getElementById('kp-cos1').value;
+  const c2=+document.getElementById('kp-cos2').value;
+  const U=+document.getElementById('kp-U').value;
+  if(!P||!c1||!c2){alert('Vyplň všechny hodnoty.');return;}
+  if(c2<=c1){alert('Požadovaný cos φ musí být větší než stávající.');return;}
+  const t1=Math.sqrt(1-c1*c1)/c1;
+  const t2=Math.sqrt(1-c2*c2)/c2;
+  const Qk=P*(t1-t2);
+  const C_uF=(Qk*1000)/(2*Math.PI*50*U*U)*1e6;
+  const Sp=P/c1;
+  const Spo=P/c2;
+  lastR.kompenzace={label:Qk.toFixed(2)+' kVAr',sub:'cos φ '+c1+' → '+c2,type:'Kompenzace účiníku'};
+  document.getElementById('kompenzace-values').innerHTML=
+    ri('Potřebná kompenzace',Qk.toFixed(2)+' kVAr','jalový výkon','hl')+
+    ri('Kondenzátor',C_uF.toFixed(1)+' μF','při '+U+' V / 50 Hz')+
+    ri('Zdánlivý výkon před',(Sp/1000).toFixed(2)+' kVA','cos φ = '+c1)+
+    ri('Zdánlivý výkon po',(Spo/1000).toFixed(2)+' kVA','cos φ = '+c2,'ok');
+  document.getElementById('kompenzace-note').innerHTML=
+    '<div class="note ok">✓ Kompenzací ušetříš '+((1-Spo/Sp)*100).toFixed(1)+' % zdánlivého výkonu.</div>';
+  document.getElementById('result-kompenzace').classList.add('visible');
+}
+
+// ── Transformátor ──────────────────────────────
+function vypocitejTransformator(){
+  const U1=+document.getElementById('t-U1').value;
+  const U2=+document.getElementById('t-U2').value;
+  const P=+document.getElementById('t-P').value;
+  const eta=+document.getElementById('t-eta').value/100;
+  if(!U1||!U2||!P){alert('Vyplň všechny hodnoty.');return;}
+  const prevod=U1/U2;
+  const I2=P/U2;
+  const Pp=P/eta;
+  const I1=Pp/U1;
+  const ztraty=Pp-P;
+  lastR.transformator={label:prevod.toFixed(2)+':1',sub:U1+'V→'+U2+'V · '+P+'W',type:'Transformátor'};
+  document.getElementById('transformator-values').innerHTML=
+    ri('Převodní poměr',prevod.toFixed(2)+':1','N₁/N₂','hl')+
+    ri('Proud primár',I1.toFixed(2)+' A','při '+U1+' V')+
+    ri('Proud sekundár',I2.toFixed(2)+' A','při '+U2+' V')+
+    ri('Ztráty',ztraty.toFixed(1)+' W','účinnost '+(eta*100).toFixed(0)+' %',ztraty<P*0.1?'ok':'warn');
+  document.getElementById('transformator-note').innerHTML=
+    '<div class="note info">ℹ Příkon ze sítě: '+Pp.toFixed(0)+' W. Na sekundáru dostaneš '+P+' W při '+U2+' V.</div>';
+  document.getElementById('result-transformator').classList.add('visible');
+}
+
+// ── Historie ───────────────────────────────────
+let hist=[];
+function saveToHistory(type){
+  const r=lastR[type];if(!r)return;
+  hist.unshift(Object.assign({},r,{time:new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'})}));
+  if(hist.length>20)hist.pop();
+  renderHistory();
+}
+function renderHistory(){
+  const el=document.getElementById('history-list');
+  if(!hist.length){el.innerHTML='<div class="h-empty">Zatím žádné výpočty.<br>Po výpočtu klikni<br>„+ Uložit".</div>';return;}
+  el.innerHTML=hist.map(h=>'<div class="h-item"><div class="h-type">'+h.type+' · '+h.time+'</div><div class="h-main">'+h.label+'</div><div class="h-sub">'+h.sub+'</div></div>').join('');
+}
+function clearHistory(){hist=[];renderHistory();}
+renderSpotrebice();
+</script>
+</body>
+</html>
